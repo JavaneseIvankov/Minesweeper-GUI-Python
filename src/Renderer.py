@@ -1,21 +1,22 @@
+from os import stat
 import customtkinter as ctk
 import Controller as ctrl
 from pathlib import Path
 from PIL import Image
 
 class Refs:
-    cellSize = 50
+    cellSize = 30
 
-    # pageRef = (Menu, RunningGame, Dialogue)
     @staticmethod
     def imgWrapper(path, cellSize):
         img = Image.open(path)
         return ctk.CTkImage(light_image=img, dark_image=img, size=(cellSize, cellSize))
-        # return ImageTk.PhotoImage(img.resize((cellSize, cellSize)))
 
     buttonRef = {}
 
     ROOT_DIR = Path(__file__).parent.parent
+
+    THEME_PATH = f"{ROOT_DIR}/assets/color_theme.json"
 
     imgDefault = imgWrapper(f"{ROOT_DIR}/assets/default.png", cellSize)
     img0 = imgWrapper(f"{ROOT_DIR}/assets/empty0.png", cellSize)
@@ -49,6 +50,10 @@ class fullFrame(ctk.CTkFrame):
 class App(ctk.CTk):
     instance = None
 
+    @classmethod
+    def accessInstance(cls):
+        return cls.instance
+
     def __init__(self, *args, **kwargs):
         ctk.CTk.__init__(self, *args, **kwargs)
         ve = 1000
@@ -58,6 +63,7 @@ class App(ctk.CTk):
         self.__class__.instance = self
 
         ctk.set_appearance_mode("Dark")
+        ctk.set_default_color_theme(Refs.THEME_PATH)
 
         container = ctk.CTkFrame(self)
         container.pack(fill="both", expand=True)
@@ -100,8 +106,8 @@ class Menu(ctk.CTkFrame):
 
         self.inner = ctk.CTkFrame(master=self)
         self.inner.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.5, anchor='center')
-        self.innerFg = '#0000ff' # TODO: CHANGE THIS TO PROPER COLOR
-        self.inner.configure(fg_color=self.innerFg)
+        # self.innerFg = '#0000ff' # TODO: CHANGE THIS TO PROPER COLOR
+        # self.inner.configure(fg_color=self.innerFg)
 
         self.chosen = ctk.StringVar()  #we will use 3 consecutive numbers (as String, separated by -) as a way to store chosen difficulty
         self.generateButtons(router)
@@ -143,18 +149,20 @@ class Menu(ctk.CTkFrame):
         start = ctk.CTkButton(self.inner, text='start', command=lambda router=router: self.startGame(router))
         start.pack(side='bottom', pady=30)
 
-        spacer = ctk.CTkFrame(self, height=30, fg_color=self.innerFg, bg_color=self.innerFg)
-        spacer.pack(in_=self.inner, side='top')
+        # spacer = ctk.CTkFrame(self, height=30, fg_color=self.innerFg, bg_color=self.innerFg)
+        # spacer.pack(in_=self.inner, side='top')
+        optionFrame = ctk.CTkFrame(self.inner)
+        # optionFrame.configure(corner_radius=0, border_width=10)
+        optionFrame.configure(fg_color='transparent')
+        optionFrame.pack(in_=self.inner, pady=20, padx=20)
 
-        DiffOptionPack(self.inner, self.chosen, "test", 3, 3, 1)
-        DiffOptionPack(self.inner, self.chosen, "test", 4, 3, 1)
-        DiffOptionPack(self.inner, self.chosen, "test", 5, 3, 1)
-        DiffOptionPack(self.inner, self.chosen, "test", 6, 3, 1)
-        DiffOptionPack(self.inner, self.chosen, "test", 8, 3, 1)
+        DiffOptionPack(optionFrame, self.chosen, "Beginner", 9, 9, 10)
+        DiffOptionPack(optionFrame, self.chosen, "Intermediate", 16, 16, 40)
+        DiffOptionPack(optionFrame, self.chosen, "Expert", 30, 16, 99)
         CustomOptionPack(self.inner, self.chosen)
 
         errLabel = ctk.CTkLabel(self.inner, text="row, col, and mine cannot be 0")
-        tipLabel = ctk.CTkLabel(self.inner, text="*Press circle button after filling entry to save custom difficulty")
+        tipLabel = ctk.CTkLabel(self.inner, text="*Press circle button after filling entry to play with custom difficulty")
         tipLabel.pack(side='top')
         errLabel.pack(side='top')
 
@@ -164,23 +172,25 @@ class DiffOptionPack(ctk.CTkFrame):
         ctk.CTkFrame.__init__(self, parent)
         # self.pack(expand=True, fill='both')
         self.pack(side='top', pady=5)
-        self.configure(bg_color="transparent")
+        self.configure(bg_color="transparent", border_width=2)
 
         chosen = f"{row_count}-{col_count}-{mine_count}"
         radio = ctk.CTkRadioButton(self, text=f"",
                                    variable=optionVar, value= chosen, width=0)
+
+        label = ctk.CTkLabel(self, text=f"{title}", anchor='w', fg_color='transparent')
+
+        desc = ctk.CTkLabel(self, text=f"Size : {row_count}x{col_count} | Mine Amount : {mine_count}", anchor='w', fg_color='transparent', bg_color='transparent')
+
         radio.pack(side='left', padx=20)
-
-        label = ctk.CTkLabel(self, text=f"{title}", anchor='w')
-        label.pack(side="left", padx=40)
-
-        desc = ctk.CTkLabel(self, text=f"Size : {row_count}x{col_count} | Mine Amount : {mine_count}", anchor='w')
-        desc.pack(side='left', padx=40)
+        desc.pack(side='left', padx=20, pady=3)
+        label.pack(side="left", padx=20, pady=3)
 
 class CustomOptionPack(ctk.CTkFrame):
     def __init__(self, parent, optionVar):
         ctk.CTkFrame.__init__(self, parent)
-        self.pack(side='top')
+        self.pack(side='top', pady=5)
+        self.configure(bg_color="transparent", border_width=2)
 
         def inputParser(data):  # We only need to strip  '-' because it can break the formatting system.
             for k, v in data.items():
@@ -221,7 +231,7 @@ class RunningGame(ctk.CTkFrame):
         self.inner = ctk.CTkFrame(master=self)
         self.inner.place(relx=0.5, rely=0.5, anchor='center')
         self.router = router
-        self.configure(fg_color="#000000")
+        # self.configure(fg_color="#000000")
 
     def reInit(self): 
         self.board = ctrl.accessInstance()
@@ -289,7 +299,7 @@ class Dialogue(ctk.CTkFrame):
 
     def killSignal(self):
         print("kill")
-        App.instance.destroy()  # TODO: REVIEW AGAIN, THIS ACCESS APP CLASS DIRECTLY.
+        App.accessInstance().destroy()
         pass
 
     def backToMenu(self):
@@ -298,15 +308,20 @@ class Dialogue(ctk.CTkFrame):
     def reInit(self):
         status = ctrl.checkGameStatus()
         if status == 1:
-            self.setLoseLayout()
+            self.setLayout(status)
         elif status == 2:
-            self.setWinLayout()
+            self.setLayout(status)
 
-    def setLoseLayout(self):
+    def setLayout(self, status):
         self.cleanQueue()
         btns = ctk.CTkFrame(master=self.inner, width=300)
 
-        label = ctk.CTkLabel(self.inner, text="You've Revealed a mine, you lose!")
+        label = ctk.CTkLabel(self.inner)
+        if status == 1:
+            label.configure(text="You've Revealed a Mine, You Lose!")
+        elif status == 2:
+            label.configure(text="Congratulations, You've Won the Game!")
+
         retry = ctk.CTkButton(self.inner, text="Retry", command=lambda page=RunningGame: self.router.showFrame(page))
         quit = ctk.CTkButton(self.inner, text="Quit", command=self.killSignal)
         back = ctk.CTkButton(self.inner, text="Menu", command=self.backToMenu)
@@ -318,10 +333,6 @@ class Dialogue(ctk.CTkFrame):
         btns.pack(side='top')
         
         self.appendQueue(btns, label, retry, quit)
-
-    def setWinLayout(self):
-        pass
-
 
 
 if __name__ == "__main__":
