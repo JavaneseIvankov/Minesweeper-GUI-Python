@@ -8,6 +8,6 @@ This project is made only for educational purposes, robustness and stability are
 
 # Usage
 1. Clone this Repo
-2. Cd to cloned the cloned repo directory
+2. Cd to the cloned repo directory
 3. Run __main__.py
 - ```$ python3 __main__.py```
