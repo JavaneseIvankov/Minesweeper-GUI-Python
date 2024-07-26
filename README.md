@@ -4,6 +4,7 @@ Classic minesweeper game (without flagging) implemented in python, using customt
 
 # Precaution
 This project is made only for educational purposes, robustness and stability are not guaranteed.
+**Spaghetti code warning (lol)**
 
 # Usage
 1. Clone this Repo
