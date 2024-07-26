@@ -1,6 +1,5 @@
-from os import stat
 import customtkinter as ctk
-import Controller as ctrl
+import src.Controller as ctrl
 from pathlib import Path
 from PIL import Image
 
@@ -149,10 +148,7 @@ class Menu(ctk.CTkFrame):
         start = ctk.CTkButton(self.inner, text='start', command=lambda router=router: self.startGame(router))
         start.pack(side='bottom', pady=30)
 
-        # spacer = ctk.CTkFrame(self, height=30, fg_color=self.innerFg, bg_color=self.innerFg)
-        # spacer.pack(in_=self.inner, side='top')
         optionFrame = ctk.CTkFrame(self.inner)
-        # optionFrame.configure(corner_radius=0, border_width=10)
         optionFrame.configure(fg_color='transparent')
         optionFrame.pack(in_=self.inner, pady=20, padx=20)
 
@@ -170,7 +166,6 @@ class Menu(ctk.CTkFrame):
 class DiffOptionPack(ctk.CTkFrame):
     def __init__(self, parent, optionVar, title, row_count, col_count, mine_count):
         ctk.CTkFrame.__init__(self, parent)
-        # self.pack(expand=True, fill='both')
         self.pack(side='top', pady=5)
         self.configure(bg_color="transparent", border_width=2)
 
@@ -231,14 +226,24 @@ class RunningGame(ctk.CTkFrame):
         self.inner = ctk.CTkFrame(master=self)
         self.inner.place(relx=0.5, rely=0.5, anchor='center')
         self.router = router
-        # self.configure(fg_color="#000000")
+        self.widgetQueue = set()
+
+    def appendQueue(self, *args):
+        for w in args:
+            self.widgetQueue.add(w)
+
+    def cleanQueue(self):
+        for w in self.widgetQueue.copy():
+            w.destroy()
+            self.widgetQueue.remove(w)
 
     def reInit(self): 
         self.board = ctrl.accessInstance()
         self.board.initGame()
-        self.generateButtons(self.board.row_count, self.board.col_count)
+        self.setLayout(self.board.row_count, self.board.col_count)
 
-    def generateButtons(self, row_count, col_count):
+    def setLayout(self, row_count, col_count):
+        self.cleanQueue()
         for i in range(row_count):
             for j in range(col_count):
                 button = ctk.CTkButton(master=self.inner, text="",
@@ -251,6 +256,7 @@ class RunningGame(ctk.CTkFrame):
                 button.grid(row=i, column=j, padx=0, pady=0)
                 button.configure(fg_color="transparent", text_color="#000000")
                 Refs.buttonRef[(i, j)] = button
+                self.appendQueue(button)
 
     def clickHandler(self, board, row, col):
         impCell = ctrl.gatherOpenCell(board, row, col)  # impacted Cell
@@ -263,6 +269,7 @@ class RunningGame(ctk.CTkFrame):
         print(f'impCell = {impCell}')
         print(f'displayedCount = {len(board.displayed)}')
         print(f'displayBoard = {board.displayBoard}')
+        print(f'queue= {self.widgetQueue}')
 
         self.branch(board)
 
@@ -294,8 +301,9 @@ class Dialogue(ctk.CTkFrame):
             self.widgetQueue.add(w)
 
     def cleanQueue(self):
-        for w in self.widgetQueue:
-            w.pack_forget()
+        for w in self.widgetQueue.copy():
+            w.destroy()
+            self.widgetQueue.remove(w)
 
     def killSignal(self):
         print("kill")
@@ -334,7 +342,3 @@ class Dialogue(ctk.CTkFrame):
         
         self.appendQueue(btns, label, retry, quit)
 
-
-if __name__ == "__main__":
-    _app = App()
-    _app.mainloop()
